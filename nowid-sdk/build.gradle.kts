@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.nowid"
+    namespace = "com.nowid.sdk"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.nowid"
+        applicationId = "com.nowid.sdk"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

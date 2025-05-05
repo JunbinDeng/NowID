@@ -20,5 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "NowID"
-include(":app")
- 
+include(":nowid-sdk")

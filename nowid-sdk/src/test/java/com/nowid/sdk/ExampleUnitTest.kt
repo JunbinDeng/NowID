@@ -1,4 +1,4 @@
-package com.nowid
+package com.nowid.sdk
 
 import org.junit.Test
 
