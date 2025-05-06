@@ -2,7 +2,7 @@ package com.nowid.sdk.transport
 
 /**
  * Strategy interface for retrieving raw CBOR-encoded payloads from different transport sources
- * (e.g., NFC, BLE, mock data).
+ * (e.g., NFC, BLE).
  */
 interface TransportStrategy {
     /**
