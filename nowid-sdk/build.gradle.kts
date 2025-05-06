@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.cbor)
     implementation(libs.cose)
+    implementation(libs.timber)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
