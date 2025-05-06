@@ -79,4 +79,4 @@ jobs:
           name: androidTest-results
           path: app/build/reports/androidTests/connected
 
-  fail-fast: false
+fail-fast: false
