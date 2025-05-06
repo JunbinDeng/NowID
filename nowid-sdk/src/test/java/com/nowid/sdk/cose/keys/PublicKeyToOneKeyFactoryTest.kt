@@ -19,10 +19,10 @@ class PublicKeyToOneKeyFactoryTest : BaseUnitTest() {
             initialize(256)
         }.generateKeyPair()
 
-        val ecPublicKey = keyPair.public as ECPublicKey
+        val ecPub = keyPair.public as ECPublicKey
 
         // Convert to the public key to the COSE OneKey
-        val oneKey = PublicKeyToOneKeyFactory.from(ecPublicKey)
+        val oneKey = PublicKeyToOneKeyFactory.from(ecPub)
 
         // Verify required key fields are correctly encoded
         assertEquals(AlgorithmID.ECDSA_256.AsCBOR(), oneKey.get(KeyKeys.Algorithm))
