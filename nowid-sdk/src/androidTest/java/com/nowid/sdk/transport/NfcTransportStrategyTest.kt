@@ -14,6 +14,7 @@ import org.junit.runner.RunWith
 class NfcTransportStrategyTest {
     @Test
     fun shouldExtractPayloadFromValidNdefIntent() {
+        // Dummy payload for testing NDEF extraction only
         val payload = "test".toByteArray()
         val record = NdefRecord.createMime("text/plain", payload)
         val message = NdefMessage(arrayOf(record))
