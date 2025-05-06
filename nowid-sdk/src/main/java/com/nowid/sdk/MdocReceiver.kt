@@ -1,19 +1,17 @@
 package com.nowid.sdk
 
-import COSE.Sign1Message
 import android.content.Intent
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.os.Build
-import com.nowid.sdk.cose.keys.PublicKeyToOneKeyFactory
-import com.upokecenter.cbor.CBORObject
+import com.nowid.sdk.cose.message.CoseDispatcher
 import java.security.PublicKey
 
 class MdocReceiver {
     fun handleNfcIntent(
         intent: Intent,
         publicKey: PublicKey,
-        onResult: (Map<String, Any>) -> Unit,
+        onResult: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         // Check if the intent is for NFC
@@ -34,28 +32,9 @@ class MdocReceiver {
             // Get payload from the first record in the first NDEF message
             val payload = ndefMessage.records.first().payload
 
-            // Decode the payload as a COSE Single Signer Data
-            val sign1Message = Sign1Message.DecodeFromBytes(payload)
-            if (sign1Message !is Sign1Message) {
-                onError("Message is not a Sign1Message");
-                return
-            }
+            val result = CoseDispatcher.dispatch(payload, publicKey)
 
-            // Verify the signature
-            if (!sign1Message.validate(PublicKeyToOneKeyFactory.from(publicKey))) {
-                onError("Signature verification failed")
-                return
-            }
-
-            // Parse the CBOR payload
-            val cborObject = CBORObject.DecodeFromBytes(payload)
-
-            // Convert the CBOR payload to result map
-            val result = mutableMapOf<String, Any>()
-            for (key in cborObject.keys) {
-                result[key.AsString()] = cborObject[key].ToObject(Any::class.java)
-            }
-            onResult(result.toMap())
+            onResult(result.getOrThrow())
         } catch (e: Exception) {
             onError("Parse error: ${e.message}")
         }
