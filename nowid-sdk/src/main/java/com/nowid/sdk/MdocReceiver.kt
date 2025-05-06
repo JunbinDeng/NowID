@@ -1,16 +1,13 @@
 package com.nowid.sdk
 
-import COSE.AlgorithmID
-import COSE.KeyKeys
-import COSE.OneKey
 import COSE.Sign1Message
 import android.content.Intent
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.os.Build
+import com.nowid.sdk.cose.keys.PublicKeyToOneKeyFactory
 import com.upokecenter.cbor.CBORObject
 import java.security.PublicKey
-import java.security.interfaces.ECPublicKey
 
 class MdocReceiver {
     fun handleNfcIntent(
@@ -45,7 +42,7 @@ class MdocReceiver {
             }
 
             // Verify the signature
-            if (!sign1Message.validate(fromPublicKeyToOneKey(publicKey))) {
+            if (!sign1Message.validate(PublicKeyToOneKeyFactory.from(publicKey))) {
                 onError("Signature verification failed")
                 return
             }
@@ -62,25 +59,5 @@ class MdocReceiver {
         } catch (e: Exception) {
             onError("Parse error: ${e.message}")
         }
-    }
-
-    fun fromPublicKeyToOneKey(publicKey: PublicKey): OneKey {
-        if (publicKey !is ECPublicKey) {
-            throw IllegalArgumentException("Only EC public keys are supported")
-        }
-
-        // Convert the public key to x and y coordinates
-        val x = CBORObject.FromObject(publicKey.w.affineX.toByteArray())
-        val y = CBORObject.FromObject(publicKey.w.affineY.toByteArray())
-
-        val keyMap = CBORObject.NewMap().apply {
-            this[KeyKeys.KeyType.AsCBOR()] = KeyKeys.KeyType_EC2
-            this[KeyKeys.Algorithm.AsCBOR()] = AlgorithmID.ECDSA_256.AsCBOR()
-            this[KeyKeys.EC2_Curve.AsCBOR()] = KeyKeys.EC2_P256
-            this[KeyKeys.EC2_X.AsCBOR()] = x
-            this[KeyKeys.EC2_Y.AsCBOR()] = y
-        }
-
-        return OneKey(keyMap)
     }
 }
