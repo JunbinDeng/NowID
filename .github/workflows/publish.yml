@@ -1,8 +1,10 @@
-name: Android Unit Tests
+name: CI for NowID
 
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
 
@@ -82,3 +84,21 @@ jobs:
           name: test-reports
           path: |
             **/build/reports
+
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Publish AAR to GitHub Packages
+        run: ./gradlew :nowid-sdk:publish -PVERSION_NAME=${GITHUB_REF_NAME}
+        env:
+          USERNAME: ${{ secrets.USERNAME }}
+          TOKEN: ${{ secrets.TOKEN }}
