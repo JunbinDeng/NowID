@@ -27,8 +27,11 @@ internal object CoseDispatcher {
             // Extract the COSE message tag from the CBOR object
             val messageTag = MessageTag.FromInt(cbor.getMostInnerTag().ToInt32Unchecked())
 
+            // Find a handler that supports the specific message tag
             val handler = handlers.find { it.supports(messageTag) }
                 ?: return Result.failure(UnsupportedMessageTagException(messageTag))
+
+            // Delegate the message to the handler for processing
             handler.handle(payload, publicKey)
         } catch (e: Exception) {
             Result.failure(e)
