@@ -1,12 +1,10 @@
 [versions]
 agp = "8.9.2"
-kotlin = "2.0.21"
+kotlin = "2.1.0"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-appcompat = "1.7.0"
-material = "1.12.0"
 cbor = "4.2.0"
 cose-java = "1.1.0"
 timber = "5.0.1"
@@ -16,8 +14,6 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 cbor = { group = "com.upokecenter", name = "cbor", version.ref = "cbor" }
 cose = { group = "com.augustcellars.cose", name = "cose-java", version.ref = "cose-java" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
