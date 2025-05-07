@@ -13,15 +13,25 @@ internal object CoseDispatcher {
     private val handlers = arrayOf(Sign1Handler())
 
     /**
-     * @param payload   CBOR‐encoded COSE message
-     * @param publicKey key for signature verification or decryption
-     * @return a [Result] with the handler’s JSON string output or an error
+     * Decodes a CBOR-encoded COSE message and routes it to a supported handler.
+     *
+     * @param payload   the COSE message bytes
+     * @param publicKey the key used for signature verification
+     * @return a [Result] containing JSON output on success, or an error on failure
      */
     fun dispatch(payload: ByteArray, publicKey: PublicKey): Result<String> {
-        val cbor = CBORObject.DecodeFromBytes(payload)
-        val messageTag = MessageTag.FromInt(cbor.getMostInnerTag().ToInt32Unchecked())
-        val handler = handlers.find { it.supports(messageTag) }
-            ?: return Result.failure(UnsupportedMessageTagException(messageTag))
-        return handler.handle(payload, publicKey)
+        return try {
+            // Decode the payload into a CBOR object to inspect its structure
+            val cbor = CBORObject.DecodeFromBytes(payload)
+
+            // Extract the COSE message tag from the CBOR object
+            val messageTag = MessageTag.FromInt(cbor.getMostInnerTag().ToInt32Unchecked())
+
+            val handler = handlers.find { it.supports(messageTag) }
+                ?: return Result.failure(UnsupportedMessageTagException(messageTag))
+            handler.handle(payload, publicKey)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

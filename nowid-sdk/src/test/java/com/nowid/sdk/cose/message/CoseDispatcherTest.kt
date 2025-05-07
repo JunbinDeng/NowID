@@ -8,6 +8,7 @@ import COSE.OneKey
 import COSE.Sign1Message
 import com.nowid.sdk.exceptions.UnsupportedMessageTagException
 import com.nowid.sdk.testutil.BaseUnitTest
+import com.upokecenter.cbor.CBORException
 import com.upokecenter.cbor.CBORObject
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -34,6 +35,21 @@ class CoseDispatcherTest : BaseUnitTest() {
         val result = CoseDispatcher.dispatch(message.EncodeToBytes(), keyPair.public)
 
         assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `should return failure when payload is not invalid`() {
+        // Generate EC P-256 key pair
+        val keyPair = KeyPairGenerator.getInstance("EC").apply {
+            initialize(256)
+        }.generateKeyPair()
+
+        val mockPayload = byteArrayOf(0x01, 0x02)
+
+        val result = CoseDispatcher.dispatch(mockPayload, keyPair.public)
+
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is CBORException)
     }
 
     @Test
