@@ -38,7 +38,7 @@ class CoseDispatcherTest : BaseUnitTest() {
     }
 
     @Test
-    fun `should return failure when payload is not invalid`() {
+    fun `should return failure when payload is invalid`() {
         // Generate EC P-256 key pair
         val keyPair = KeyPairGenerator.getInstance("EC").apply {
             initialize(256)
