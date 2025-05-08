@@ -13,6 +13,13 @@ Android applications.
 * **CBOR Encoding**: Efficient handling of credential data using CBOR.
 * **NFC Integration**: Seamlessly receive and process credential data via NFC intents.
 
+
+## Architecture
+
+The NowID ecosystem integrates issuers, holders, and verifiers, using cryptographic algorithms to securely issue, transmit, and verify mobile verifiable credentials.
+
+<img src="https://github.com/user-attachments/assets/7f1fdd1f-0a59-48d6-9ee0-25814dfe35d8" alt="verifiable_credentials_ecosystem" width="600"/>
+
 ## Supported Algorithms
 
 | Algorithm  | Full Name                            | Key System | Used In                                  |
