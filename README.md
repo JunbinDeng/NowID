@@ -1,5 +1,7 @@
 # NowID
 
+[![](https://jitpack.io/v/JunbinDeng/NowID.svg)](https://jitpack.io/#JunbinDeng/NowID)
+
 NowID provides secure, decentralized identity solutions compatible with Verifiable Credentials (VC)
 standards.
 
@@ -53,8 +55,9 @@ The NowID ecosystem integrates issuers, holders, and verifiers, using cryptograp
 Add the JitPack repository to your root `build.gradle`:
 
 ```gradle
-allprojects {
+dependencyResolutionManagement {
     repositories {
+        mavenCentral()
         maven { url 'https://jitpack.io' }
     }
 }
@@ -63,7 +66,7 @@ allprojects {
 Then include the library in your module's `build.gradle`:
 
 ```gradle
-implementation 'com.github.JunbinDeng.NowID:nowid-sdk:1.0.0'
+implementation 'com.github.JunbinDeng:NowID:Tag'
 ```
 
 ### Basic Usage
