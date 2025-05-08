@@ -1,4 +1,4 @@
-name: CI for NowID
+name: Publish AAR
 
 on:
   push:
@@ -85,6 +85,7 @@ jobs:
             **/build/reports
 
   publish:
+    if: startWith(githubRef, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
