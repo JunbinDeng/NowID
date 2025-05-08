@@ -1,7 +1,5 @@
-package com.nowid.sdk.util
+package com.nowid.sdk.cose.keys.util
 
-import com.nowid.sdk.cose.keys.util.asUnsignedByteArray
-import com.nowid.sdk.cose.keys.util.logHex
 import com.nowid.sdk.testutil.BaseUnitTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -9,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.math.BigInteger
 
-class BigIntegerExtTest : BaseUnitTest() {
+class BigIntegersTest : BaseUnitTest() {
     @Test
     fun `should pad to correct length`() {
         val bi = BigInteger("1234567890", 10)
