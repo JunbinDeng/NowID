@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "NowID"
 include(":nowid-sdk")
+include(":nowid-safe")
