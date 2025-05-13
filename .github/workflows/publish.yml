@@ -136,6 +136,7 @@ jobs:
           BUILD_TOOLS_VERSION: "34.0.0"
 
       - name: Upload APK artifact
+        id: upload_apk
         uses: actions/upload-artifact@v4
         with:
           name: nowid-safe-apk
@@ -146,7 +147,8 @@ jobs:
 
       - name: Generate QR Code
         run: |
-          qrencode -o qr.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release-unsigned-signed.apk"
+          qrencode -o qr.png \
+            "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_apk.outputs.artifact-id }}"
 
       - name: Upload QR Code artifact
         uses: actions/upload-artifact@v4
