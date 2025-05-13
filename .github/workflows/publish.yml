@@ -147,8 +147,7 @@ jobs:
 
       - name: Generate QR Code
         run: |
-          qrencode -o qr.png \
-            "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_apk.outputs.artifact-id }}"
+          qrencode -o qr.png "${{ steps.upload_apk.outputs.archive_download_url }}"
 
       - name: Upload QR Code artifact
         uses: actions/upload-artifact@v4
