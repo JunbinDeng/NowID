@@ -163,7 +163,6 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
           asset_name: nowid-safe-release.apk
-          label: nowid-safe-release.apk
           asset_content_type: application/vnd.android.package-archive
 
       - name: Install QR code generator
