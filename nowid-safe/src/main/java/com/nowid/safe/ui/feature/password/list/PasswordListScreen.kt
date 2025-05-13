@@ -62,7 +62,8 @@ fun PasswordListScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No passwords yet\nTap the + button to create one",
+                    text = "Tap the + button to create a password.\n\n" +
+                            "Note: Changing biometric settings may clear your stored passwords.",
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyLarge
                 )
