@@ -81,7 +81,13 @@ development.
 
 ## Setup
 
-### Prerequisites
+### Download Release
+
+1. Go to the [Releases page](./releases).
+    - **Download** the latest `nowid-safe-release.apk` asset directly from the Assets section.
+    - **Scan** the QR code displayed on the release page to download and install the APK.
+
+### From Source Prerequisites
 
 - Android Studio Bumblebee or later
 - JDK 11+
@@ -123,8 +129,13 @@ cd NowID/nowid-safe
 ## Challenges & Solutions
 
 - **AEADBadTagException Handling**
-    - *Challenge*: Clearing all passwords on decryption errors risked data loss.
-    - *Solution*: Only delete the specific entry by ID, preserving other data.
+    - *Challenge*: Authentication tag mismatches during decryption (e.g., due to tampered or stale
+      IV).
+    - *Solution*: Delete only the corrupted entry by ID, preserving other data.
+- **KeyPermanentlyInvalidatedException Handling**
+    - *Challenge*: Keystore keys become invalid after biometric changes (e.g., fingerprint
+      re-enrollment).
+    - *Solution*: Recreate the encryption key and delete only the affected entry by ID.
 - **BiometricPrompt.CryptoObject Compatibility**
     - *Challenge*: Platform API varied across Android versions.
     - *Solution*: Adopted `androidx.biometric:biometric` to unify behavior back to API 23.
@@ -146,11 +157,10 @@ cd NowID/nowid-safe
 
 - Add unit and instrumented tests with CI pipeline (lint, static analysis, test runs)
 - Cloud backup/restore of encrypted vaults
-- PIN or password fallback for devices without biometrics
 - UI animations and smoother state transitions
 - Dark mode support and dynamic theming
-- Session-based unlock grace period tuning and expiration handling
 - Edit or delete existing passwords
+- One-tap copy password to clipboard
 - Accessibility support (TalkBack, large text)
 - Comprehensive error analytics and crash reporting
 
