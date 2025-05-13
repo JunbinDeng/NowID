@@ -1,13 +1,10 @@
 package com.nowid.safe.ui.feature.password.detail
 
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-import androidx.biometric.BiometricPrompt
 import androidx.biometric.BiometricPrompt.CryptoObject
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nowid.safe.R
+import com.google.protobuf.ByteString
+import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore.EncryptedPasswordData
 import com.nowid.safe.data.repository.PasswordRepository
 import com.nowid.safe.domain.BiometricEncryptUseCase
 import com.nowid.safe.domain.EncryptionMode
@@ -45,42 +42,26 @@ class PasswordDetailViewModel @AssistedInject constructor(
     private val _authError = MutableStateFlow<String?>(null)
     val authError: StateFlow<String?> = _authError.asStateFlow()
 
-    fun loadPassword(activity: FragmentActivity, id: String) {
+    suspend fun getEncryptedData(): EncryptedPasswordData? {
+        return repository.getEncryptedData(id).apply {
+            _title.value = this?.passwordItem?.title
+        }
+    }
+
+    fun tryGetCrypto(iv: ByteString?): CryptoObject? {
+        return biometricCryptoUseCase.tryGetCrypto(EncryptionMode.DECRYPT, iv)
+    }
+
+    fun loadPasswordWithCrypto(crypto: CryptoObject) {
         viewModelScope.launch {
-            val encryptedData = repository.getEncryptedData(id) ?: return@launch
-            _title.value = encryptedData.passwordItem.title
+            _authError.value = null
 
-            val promptBuilder = BiometricPrompt.PromptInfo.Builder()
-                .setTitle(activity.getString(R.string.biometric_prompt_decrypt_title))
-                .setSubtitle(activity.getString(R.string.biometric_prompt_decrypt_subtitle))
-                .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
-                .build()
-
-            fun loadPasswordWithCrypto(crypto: CryptoObject) {
-                viewModelScope.launch {
-                    _authError.value = null
-
-                    try {
-                        val plain = repository.loadPasswordWithCrypto(id, crypto)
-                        _decrypted.value = plain
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        _authError.value = e.message
-                    }
-                }
-            }
-
-            biometricCryptoUseCase(
-                activity,
-                promptBuilder,
-                EncryptionMode.DECRYPT,
-                encryptedData.iv
-            ) { result ->
-                if (result.isSuccess) {
-                    loadPasswordWithCrypto(result.getOrThrow())
-                } else {
-                    _authError.value = result.exceptionOrNull()?.message
-                }
+            try {
+                val plain = repository.loadPasswordWithCrypto(id, crypto)
+                _decrypted.value = plain
+            } catch (e: Exception) {
+                Timber.e(e)
+                _authError.value = e.message
             }
         }
     }

@@ -2,6 +2,9 @@ package com.nowid.safe.ui.feature.password.detail
 
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,11 +25,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.nowid.safe.R
 import com.nowid.safe.ui.component.NowIDAppBar
 import com.nowid.safe.ui.icon.NowIDIcons
+import com.nowid.safe.util.performBiometricEncryption
 import timber.log.Timber
 
 /**
@@ -42,21 +48,39 @@ fun PasswordDetailScreen(
     val activity =
         LocalActivity.current as? FragmentActivity ?: error("Must be hosted in an FragmentActivity")
 
-    LaunchedEffect(viewModel.id) {
-        try {
-            viewModel.loadPassword(activity, viewModel.id)
-        } catch (e: Exception) {
-            Timber.e(e)
-            Toast.makeText(activity, e.message, Toast.LENGTH_SHORT).show()
-        }
-    }
-
     val title = viewModel.title.collectAsState().value
     val decrypted = viewModel.decrypted.collectAsState().value
 
     val authError = viewModel.authError.collectAsState().value
 
     var passwordVisible by remember { mutableStateOf(false) }
+
+    val promptTitle = stringResource(R.string.biometric_prompt_decrypt_title)
+    val promptSubtitle = stringResource(R.string.biometric_prompt_decrypt_subtitle)
+
+    LaunchedEffect(viewModel.id) {
+        val encrypted = viewModel.getEncryptedData()
+        val iv = encrypted?.iv
+
+        performBiometricEncryption(
+            activity = activity,
+            promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle(promptTitle)
+                .setSubtitle(promptSubtitle)
+                .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
+                .build(),
+            tryGetCrypto = {
+                viewModel.tryGetCrypto(iv)
+            },
+            onSuccess = { crypto ->
+                viewModel.loadPasswordWithCrypto(crypto)
+            },
+            onError = { msg ->
+                Timber.e(msg)
+                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+            },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -91,7 +115,8 @@ fun PasswordDetailScreen(
                             contentDescription = "Password Visibility"
                         )
                     }
-                })
+                },
+            )
         }
     }
 }

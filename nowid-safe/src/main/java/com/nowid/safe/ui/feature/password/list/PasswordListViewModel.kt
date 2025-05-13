@@ -1,12 +1,10 @@
 package com.nowid.safe.ui.feature.password.list
 
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-import androidx.biometric.BiometricPrompt
-import androidx.fragment.app.FragmentActivity
+import androidx.biometric.BiometricPrompt.CryptoObject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nowid.safe.R
+import com.google.protobuf.ByteString
+import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore.EncryptedPasswordData
 import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore.EncryptedPasswordData.PasswordItem
 import com.nowid.safe.data.repository.PasswordRepository
 import com.nowid.safe.domain.BiometricEncryptUseCase
@@ -16,6 +14,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,31 +30,26 @@ class PasswordListViewModel @Inject constructor(
             emptyList()
         )
 
-    fun authenticateToViewPassword(
-        activity: FragmentActivity,
+    suspend fun getEncryptedData(id: String): EncryptedPasswordData? {
+        return repository.getEncryptedData(id)
+    }
+
+    fun tryGetCrypto(iv: ByteString?): CryptoObject? {
+        return biometricCryptoUseCase.tryGetCrypto(EncryptionMode.DECRYPT, iv)
+    }
+
+    fun loadPasswordWithCrypto(
         id: String,
-        onResult: (Result<Unit>) -> Unit
+        crypto: CryptoObject,
+        onResult: (Result<String>) -> Unit
     ) {
         viewModelScope.launch {
-            val encryptedData = repository.getEncryptedData(id) ?: return@launch
-
-            val promptBuilder = BiometricPrompt.PromptInfo.Builder()
-                .setTitle(activity.getString(R.string.biometric_prompt_decrypt_title))
-                .setSubtitle(activity.getString(R.string.biometric_prompt_decrypt_subtitle))
-                .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
-                .build()
-
-            biometricCryptoUseCase(
-                activity,
-                promptBuilder,
-                EncryptionMode.DECRYPT,
-                encryptedData.iv
-            ) { result ->
-                if (result.isSuccess) {
-                    onResult(Result.success(Unit))
-                } else {
-                    onResult(Result.failure(result.exceptionOrNull()!!))
-                }
+            try {
+                val plain = repository.loadPasswordWithCrypto(id, crypto)!!
+                onResult(Result.success(plain))
+            } catch (e: Exception) {
+                Timber.e(e)
+                onResult(Result.failure(e))
             }
         }
     }

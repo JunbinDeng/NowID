@@ -2,6 +2,9 @@ package com.nowid.safe.ui.feature.password.list
 
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,12 +21,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.nowid.safe.R
 import com.nowid.safe.ui.icon.NowIDIcons
+import com.nowid.safe.util.performBiometricEncryption
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -45,6 +53,47 @@ fun PasswordListScreen(
         LocalActivity.current as? FragmentActivity ?: error("Must be hosted in an FragmentActivity")
 
     val items by viewModel.items.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val promptTitle = stringResource(R.string.biometric_prompt_decrypt_title)
+    val promptSubtitle = stringResource(R.string.biometric_prompt_decrypt_subtitle)
+
+    fun handlePasswordItemClick(id: String) {
+        coroutineScope.launch {
+            val encrypted = viewModel.getEncryptedData(id)
+            val iv = encrypted?.iv
+
+            val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle(promptTitle)
+                .setSubtitle(promptSubtitle)
+                .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
+                .build()
+
+            performBiometricEncryption(
+                activity = activity,
+                promptInfo = promptInfo,
+                tryGetCrypto = { viewModel.tryGetCrypto(iv) },
+                onSuccess = { crypto ->
+                    viewModel.loadPasswordWithCrypto(id, crypto) { result ->
+                        if (result.isSuccess) {
+                            onItemClick(id)
+                        } else {
+                            Toast.makeText(
+                                activity,
+                                result.exceptionOrNull()?.message ?: "Load password failed",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                },
+                onError = { msg ->
+                    Timber.e(msg)
+                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                },
+            )
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -80,19 +129,7 @@ fun PasswordListScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .clickable {
-                                viewModel.authenticateToViewPassword(activity, item.id) { result ->
-                                    if (result.isSuccess) {
-                                        onItemClick(item.id)
-                                    } else {
-                                        Toast.makeText(
-                                            activity,
-                                            result.exceptionOrNull()?.message,
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-
-                                        Timber.e(result.exceptionOrNull())
-                                    }
-                                }
+                                handlePasswordItemClick(item.id)
                             }
                     )
                     HorizontalDivider()

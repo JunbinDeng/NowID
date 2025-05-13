@@ -2,6 +2,9 @@ package com.nowid.safe.ui.feature.password.add
 
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,14 +23,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.nowid.safe.R
 import com.nowid.safe.ui.component.NowIDAppBar
 import com.nowid.safe.ui.icon.NowIDIcons
+import com.nowid.safe.util.performBiometricEncryption
+import timber.log.Timber
 
 /**
  * Maximum allowed length for title and password input fields.
@@ -55,6 +62,9 @@ fun AddPasswordScreen(
 
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val promptTitle = stringResource(R.string.biometric_prompt_encrypt_title)
+    val promptSubtitle = stringResource(R.string.biometric_prompt_encrypt_subtitle)
+
     Scaffold(
         topBar = {
             NowIDAppBar(
@@ -78,18 +88,39 @@ fun AddPasswordScreen(
                         return@NowIDAppBar
                     }
 
-                    viewModel.addPassword(
-                        activity = activity, title = titleText, plain = passwordText
-                    ) {
-                        if (it.isFailure) {
-                            Toast.makeText(
-                                activity, it.exceptionOrNull()?.message, Toast.LENGTH_SHORT
-                            ).show()
-                            return@addPassword
-                        }
-                        Toast.makeText(activity, "Password saved", Toast.LENGTH_SHORT).show()
-                        onBackClick()
-                    }
+                    performBiometricEncryption(
+                        activity = activity,
+                        promptInfo = BiometricPrompt.PromptInfo.Builder()
+                            .setTitle(promptTitle)
+                            .setSubtitle(promptSubtitle)
+                            .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
+                            .build(),
+                        tryGetCrypto = { viewModel.tryGetCrypto() },
+                        onSuccess = {
+                            viewModel.addPassword(
+                                titleText, passwordText
+                            ) { result ->
+                                if (result.isSuccess) {
+                                    Toast.makeText(
+                                        activity, "Password saved", Toast.LENGTH_SHORT
+                                    ).show()
+                                    onBackClick()
+                                    return@addPassword
+                                } else {
+                                    Timber.e(result.exceptionOrNull())
+                                    Toast.makeText(
+                                        activity,
+                                        result.exceptionOrNull()?.message ?: "Password save failed",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        },
+                        onError = { msg ->
+                            Timber.e(msg)
+                            Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                        },
+                    )
                 })
         }) { innerPadding ->
         Column(
