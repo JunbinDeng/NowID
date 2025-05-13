@@ -143,9 +143,16 @@ jobs:
           mv nowid-safe/build/outputs/apk/release/nowid-safe-release-unsigned-signed.apk \
              nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
 
-      - name: Create GitHub Release
+      - name: Install QR code generator
+        run: sudo apt-get update && sudo apt-get install -y qrencode
+
+      - name: Generate QR Code
+        run: |
+          qrencode -o qr.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release.apk"
+
+      - name: Create or Update GitHub Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -153,7 +160,9 @@ jobs:
           release_name: Release ${{ github.ref_name }}
           draft: false
           prerelease: ${{ !startsWith(github.ref_name, 'v') }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
+            qr.png
           generate_release_notes: true
           body: |
             ## Download Links
@@ -162,30 +171,3 @@ jobs:
             - **Scan this QR Code to download the APK:**
             
               ![Scan to download](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/apk-qrcode.png)
-
-      - name: Upload APK to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
-          asset_name: nowid-safe-release.apk
-          asset_content_type: application/vnd.android.package-archive
-
-      - name: Install QR code generator
-        run: sudo apt-get update && sudo apt-get install -y qrencode
-
-      - name: Generate QR Code
-        run: |
-          qrencode -o qr.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release.apk"
-
-      - name: Upload QR Code to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: qr.png
-          asset_name: apk-qrcode.png
-          asset_content_type: image/png
