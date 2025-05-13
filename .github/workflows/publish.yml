@@ -154,6 +154,14 @@ jobs:
           draft: false
           prerelease: ${{ !startsWith(github.ref_name, 'v') }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          body: |
+            ## Download Links
+            
+            - [Download APK (signed)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nowid-safe-release.apk)
+            - **Scan this QR Code to download the APK:**
+            
+              ![Scan to download](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/apk-qrcode.png)
 
       - name: Upload APK to Release
         uses: actions/upload-release-asset@v1
