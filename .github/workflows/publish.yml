@@ -145,14 +145,14 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
           release_name: Release ${{ github.ref_name }}
           draft: false
-          prerelease: false
+          prerelease: ${{ !startsWith(github.ref_name, 'v') }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload APK to Release
