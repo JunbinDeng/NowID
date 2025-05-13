@@ -135,19 +135,24 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
 
+      - name: Rename signed APK
+        run: |
+          mv nowid-safe/build/outputs/apk/release/nowid-safe-release-unsigned-signed.apk \
+             nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
+
       - name: Upload APK artifact
         id: upload_apk
         uses: actions/upload-artifact@v4
         with:
           name: nowid-safe-apk
-          path: nowid-safe/build/outputs/apk/release/nowid-safe-release-unsigned-signed.apk
+          path: nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
 
       - name: Install QR code generator
         run: sudo apt-get update && sudo apt-get install -y qrencode
 
       - name: Generate QR Code
         run: |
-          qrencode -o qr.png "${{ steps.upload_apk.outputs.archive_download_url }}"
+          qrencode -o qr.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release.apk"
 
       - name: Upload QR Code artifact
         uses: actions/upload-artifact@v4
