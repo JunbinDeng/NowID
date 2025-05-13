@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">nowid-safe</string>
+    <string name="biometric_prompt_decrypt_title">Unlock Password</string>
+    <string name="biometric_prompt_decrypt_subtitle">Please authenticate using biometrics or device credentials</string>
+    <string name="biometric_prompt_encrypt_title">Lock Password</string>
+    <string name="biometric_prompt_encrypt_subtitle">Please authenticate using biometrics or device credentials</string>
+</resources>
