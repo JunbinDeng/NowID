@@ -148,7 +148,7 @@ jobs:
 
       - name: Generate QR Code
         run: |
-          qrencode -o qr.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release.apk"
+          qrencode -o apk-qrcode.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release.apk"
 
       - name: Create or Update GitHub Release
         id: create_release
@@ -162,7 +162,7 @@ jobs:
           prerelease: ${{ !startsWith(github.ref_name, 'v') }}
           files: |
             nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
-            qr.png
+            apk-qrcode.png
           generate_release_notes: true
           body: |
             ## Download Links
