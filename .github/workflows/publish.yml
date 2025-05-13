@@ -140,12 +140,23 @@ jobs:
           mv nowid-safe/build/outputs/apk/release/nowid-safe-release-unsigned-signed.apk \
              nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
 
-      - name: Upload APK artifact
-        id: upload_apk
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          name: nowid-safe-apk
-          path: nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: nowid-safe/build/outputs/apk/release/nowid-safe-release.apk
+          asset_name: nowid-safe-release.apk
+          asset_content_type: application/vnd.android.package-archive
 
       - name: Install QR code generator
         run: sudo apt-get update && sudo apt-get install -y qrencode
@@ -154,8 +165,10 @@ jobs:
         run: |
           qrencode -o qr.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release.apk"
 
-      - name: Upload QR Code artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload QR Code to Release
+        uses: actions/upload-release-asset@v1
         with:
-          name: apk-qr-code
-          path: qr.png
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: qr.png
+          asset_name: apk-qrcode.png
+          asset_content_type: image/png
