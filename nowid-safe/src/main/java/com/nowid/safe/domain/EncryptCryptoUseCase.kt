@@ -62,6 +62,8 @@ class BiometricEncryptUseCase @Inject constructor(
                         val crypto: CryptoObject? = tryGetCrypto()
                         if (crypto != null) {
                             onResult(Result.success(crypto))
+                        } else {
+                            onResult(Result.failure(UserNotAuthenticatedException("Authentication failed")))
                         }
                     } catch (e: Exception) {
                         onResult(Result.failure(e))

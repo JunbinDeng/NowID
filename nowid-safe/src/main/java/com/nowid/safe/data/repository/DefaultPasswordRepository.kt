@@ -15,6 +15,7 @@ import com.nowid.safe.datastore.AesGcmCipher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.crypto.AEADBadTagException
@@ -28,14 +29,11 @@ class DefaultPasswordRepository @Inject constructor(
     @Dispatcher(IO) private val ioDispatcher: CoroutineDispatcher,
     private val passwordStore: DataStore<PasswordStore>,
 ) : PasswordRepository {
-    override fun observePasswordItems(): Flow<List<PasswordItem>> {
-        val passwordItem = passwordStore.data.map { store ->
-            store.entriesList.map { encrypted ->
-                encrypted.passwordItem
-            }
-        }
-        return passwordItem
-    }
+    override fun observePasswordItems(): Flow<List<PasswordItem>> =
+        passwordStore.data
+            .map { store -> store.entriesList.map { it.passwordItem } }
+            .flowOn(ioDispatcher)
+
 
     override fun getEncryptCrypto(): CryptoObject {
         val cipher = AesGcmCipher.initCipher(Cipher.ENCRYPT_MODE)
@@ -45,30 +43,33 @@ class DefaultPasswordRepository @Inject constructor(
     override suspend fun savePasswordWithCrypto(
         id: String, title: String, plain: String, crypto: CryptoObject
     ) {
-        val cipher = crypto.cipher ?: throw IllegalStateException("Encryption cipher unavailable")
-        val ivBytes = cipher.iv
+        return withContext(ioDispatcher) {
+            val cipher =
+                crypto.cipher ?: throw IllegalStateException("Encryption cipher unavailable")
+            val ivBytes = cipher.iv
 
-        try {
-            val encryptedBytes = cipher.doFinal(plain.toByteArray())
+            try {
+                val encryptedBytes = cipher.doFinal(plain.toByteArray())
 
-            val encryptedPasswordData = encryptedPasswordData {
-                passwordItem = passwordItem {
-                    this.id = id
-                    this.title = title
+                val encryptedPasswordData = encryptedPasswordData {
+                    passwordItem = passwordItem {
+                        this.id = id
+                        this.title = title
+                    }
+                    iv = ivBytes.toByteString()
+                    encryptedPassword = encryptedBytes.toByteString()
                 }
-                iv = ivBytes.toByteString()
-                encryptedPassword = encryptedBytes.toByteString()
-            }
 
-            passwordStore.updateData { store ->
-                store.toBuilder().apply {
-                    addEntries(encryptedPasswordData)
-                }.build()
+                passwordStore.updateData { store ->
+                    store.toBuilder().apply {
+                        addEntries(encryptedPasswordData)
+                    }.build()
+                }
+            } catch (e: AEADBadTagException) {
+                // Key invalidated due to device credential change
+                deletePassword(id)
+                throw e
             }
-        } catch (e: AEADBadTagException) {
-            // Key invalidated due to device credential change
-            deletePassword(id)
-            throw e
         }
     }
 
@@ -100,14 +101,16 @@ class DefaultPasswordRepository @Inject constructor(
     }
 
     override suspend fun deletePassword(id: String) {
-        passwordStore.updateData { store ->
-            store.toBuilder().apply {
-                // Remove the entry with the matching id
-                clearEntries()
-                addAllEntries(
-                    store.entriesList.filter { it.passwordItem.id != id }
-                )
-            }.build()
+        return withContext(ioDispatcher) {
+            passwordStore.updateData { store ->
+                store.toBuilder().apply {
+                    // Remove the entry with the matching id
+                    clearEntries()
+                    addAllEntries(
+                        store.entriesList.filter { it.passwordItem.id != id }
+                    )
+                }.build()
+            }
         }
     }
 }
