@@ -125,7 +125,6 @@ jobs:
 
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
-        id: nowid_safe_app
         with:
           releaseDirectory: nowid-safe/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -140,14 +139,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nowid-safe-apk
-          path: ${{steps.nowid_safe_app.outputs.signedReleaseFile}}
+          path: nowid-safe/build/outputs/apk/release/nowid-safe-release-unsigned-signed.apk
 
       - name: Install QR code generator
         run: sudo apt-get update && sudo apt-get install -y qrencode
 
       - name: Generate QR Code
         run: |
-          qrencode -o qr.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release.apk"
+          qrencode -o qr.png "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/nowid-safe-release-unsigned-signed.apk"
 
       - name: Upload QR Code artifact
         uses: actions/upload-artifact@v4
