@@ -1,3 +1,5 @@
+# NowID SDK
+
 NowID SDK (`nowid-sdk`) offers easy-to-use tools for credential verification using COSE_Sign1 and
 CBOR encoding over NFC. The current version is implemented in Kotlin, tailored specifically for
 Android applications.
