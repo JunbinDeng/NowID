@@ -83,7 +83,7 @@ development.
 
 ### Download Release
 
-1. Go to the [Releases page](./releases).
+1. Go to the [Releases page](https://github.com/JunbinDeng/NowID/releases).
     - **Download** the latest `nowid-safe-release.apk` asset directly from the Assets section.
     - **Scan** the QR code displayed on the release page to download and install the APK.
 
