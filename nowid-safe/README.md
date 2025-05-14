@@ -97,13 +97,12 @@ development.
 
 ```bash
 git clone https://github.com/JunbinDeng/NowID.git
-cd NowID/nowid-safe
 ./gradlew clean assembleDebug
 ```
 
 ### Run
 
-1. Open the `nowid-safe` module in Android Studio
+1. Open the `NowID` project in Android Studio
 2. Sync Gradle and build the project
 3. Run on a connected device or emulator
 4. Grant biometric and keystore permissions when prompted
