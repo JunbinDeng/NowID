@@ -8,7 +8,7 @@ import timber.log.Timber
 class NowIDSafeApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        if (true) {
+        if (BuildConfig.DEBUG) {
             // Print all logs
             Timber.plant(Timber.DebugTree())
         } else {
