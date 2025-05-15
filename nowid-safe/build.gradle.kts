@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.devtools.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.protobuf)
+    alias(libs.plugins.hilt.android.plugin)
+    kotlin("kapt")
 }
 
 android {
@@ -19,7 +21,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.nowid.safe.HiltTestRunner"
     }
 
     buildTypes {
@@ -34,6 +36,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -82,13 +85,27 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.timber)
     implementation(libs.protobuf.kotlin.lite)
-    ksp(libs.hilt.android.compiler)
+    kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.foundation)
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.hilt.android.testing)
+    testImplementation(kotlin("test"))
+    kaptTest(libs.hilt.android.compiler)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.mockito.core)
+    androidTestImplementation(libs.mockito.kotlin)
+    androidTestImplementation(libs.mockito.android)
+    androidTestImplementation(libs.androidx.junit.ktx)
+    androidTestImplementation(libs.hilt.android.testing)
+    kaptAndroidTest(libs.hilt.android.compiler)
+    kaptAndroidTest(libs.hilt.compiler)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }

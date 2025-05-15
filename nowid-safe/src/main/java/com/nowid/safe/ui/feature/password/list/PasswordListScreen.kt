@@ -1,5 +1,6 @@
 package com.nowid.safe.ui.feature.password.list
 
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.nowid.safe.R
@@ -33,6 +35,7 @@ import com.nowid.safe.ui.icon.NowIDIcons
 import com.nowid.safe.util.performBiometricEncryption
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.crypto.AEADBadTagException
 
 /**
  * Composable screen for displaying a list of saved password titles.
@@ -79,17 +82,43 @@ fun PasswordListScreen(
                         if (result.isSuccess) {
                             onItemClick(id)
                         } else {
-                            Toast.makeText(
-                                activity,
-                                result.exceptionOrNull()?.message ?: "Load password failed",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            val exception = result.exceptionOrNull()
+                            Timber.e(exception)
+
+                            if (exception is AEADBadTagException) {
+                                Toast.makeText(
+                                    activity,
+                                    "Biometric authentication failed. Your device credentials may have changed.",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
+                            } else {
+                                Toast.makeText(
+                                    activity,
+                                    exception?.message ?: "Load password failed",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
                     }
                 },
-                onError = { msg ->
-                    Timber.e(msg)
-                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+                onError = { e ->
+                    Timber.e(e)
+
+                    if (e is KeyPermanentlyInvalidatedException) {
+                        Toast.makeText(
+                            activity,
+                            "Biometric settings have changed. Please reauthenticate to continue.",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    } else {
+                        Toast.makeText(
+                            activity,
+                            e.message ?: "Biometric authentication failed",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 },
             )
         }

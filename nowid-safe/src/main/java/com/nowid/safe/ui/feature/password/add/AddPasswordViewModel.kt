@@ -16,9 +16,8 @@ class AddPasswordViewModel @Inject constructor(
     private val biometricCryptoUseCase: BiometricEncryptUseCase,
     private val repository: PasswordRepository
 ) : ViewModel() {
-    fun tryGetCrypto(): CryptoObject? {
-        return biometricCryptoUseCase.tryGetCrypto(EncryptionMode.ENCRYPT, null)
-    }
+    fun tryGetCrypto(): Result<CryptoObject> =
+        biometricCryptoUseCase.tryGetCrypto(EncryptionMode.ENCRYPT, null)
 
     fun addPassword(
         title: String,

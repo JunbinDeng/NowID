@@ -1,5 +1,7 @@
 package com.nowid.safe.data.repository
 
+import android.security.keystore.KeyPermanentlyInvalidatedException
+import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricPrompt.CryptoObject
 import androidx.datastore.core.DataStore
 import com.google.protobuf.ByteString
@@ -11,7 +13,7 @@ import com.nowid.safe.data.PasswordStoreKt.encryptedPasswordData
 import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore
 import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore.EncryptedPasswordData
 import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore.EncryptedPasswordData.PasswordItem
-import com.nowid.safe.datastore.AesGcmCipher
+import com.nowid.safe.datastore.KeyProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -19,7 +21,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.crypto.AEADBadTagException
-import javax.crypto.Cipher
 import javax.inject.Inject
 
 /**
@@ -27,7 +28,8 @@ import javax.inject.Inject
  */
 class DefaultPasswordRepository @Inject constructor(
     @Dispatcher(IO) private val ioDispatcher: CoroutineDispatcher,
-    private val passwordStore: DataStore<PasswordStore>,
+    @get:VisibleForTesting val passwordStore: DataStore<PasswordStore>,
+    @get:VisibleForTesting val keyProvider: KeyProvider,
 ) : PasswordRepository {
     override fun observePasswordItems(): Flow<List<PasswordItem>> =
         passwordStore.data
@@ -36,8 +38,14 @@ class DefaultPasswordRepository @Inject constructor(
 
 
     override fun getEncryptCrypto(): CryptoObject {
-        val cipher = AesGcmCipher.initCipher(Cipher.ENCRYPT_MODE)
-        return CryptoObject(cipher)
+        try {
+            val cipher = keyProvider.getEncryptCipher()
+            return CryptoObject(cipher)
+        } catch (e: KeyPermanentlyInvalidatedException) {
+            keyProvider.deleteEntry()
+            keyProvider.getEncryptCipher()
+            throw e
+        }
     }
 
     override suspend fun savePasswordWithCrypto(
@@ -51,7 +59,7 @@ class DefaultPasswordRepository @Inject constructor(
             try {
                 val encryptedBytes = cipher.doFinal(plain.toByteArray())
 
-                val encryptedPasswordData = encryptedPasswordData {
+                val newEntry = encryptedPasswordData {
                     passwordItem = passwordItem {
                         this.id = id
                         this.title = title
@@ -62,7 +70,14 @@ class DefaultPasswordRepository @Inject constructor(
 
                 passwordStore.updateData { store ->
                     store.toBuilder().apply {
-                        addEntries(encryptedPasswordData)
+                        // Update the locally stored data object with the new ID received
+                        clearEntries()
+                        addAllEntries(
+                            store.entriesList
+                                .filter { it.passwordItem.id != newEntry.passwordItem.id }
+                                .toMutableList()
+                                .apply { add(newEntry) }
+                        )
                     }.build()
                 }
             } catch (e: AEADBadTagException) {
@@ -79,8 +94,14 @@ class DefaultPasswordRepository @Inject constructor(
         }.firstOrNull()
 
     override fun getDecryptCrypto(iv: ByteString): CryptoObject {
-        val cipher = AesGcmCipher.initCipher(Cipher.DECRYPT_MODE, iv)
-        return CryptoObject(cipher)
+        try {
+            val cipher = keyProvider.getDecryptCipher(iv.toByteArray())
+            return CryptoObject(cipher)
+        } catch (e: KeyPermanentlyInvalidatedException) {
+            keyProvider.deleteEntry()
+            keyProvider.getEncryptCipher()
+            throw e
+        }
     }
 
     override suspend fun loadPasswordWithCrypto(

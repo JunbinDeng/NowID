@@ -48,9 +48,8 @@ class PasswordDetailViewModel @AssistedInject constructor(
         }
     }
 
-    fun tryGetCrypto(iv: ByteString?): CryptoObject? {
-        return biometricCryptoUseCase.tryGetCrypto(EncryptionMode.DECRYPT, iv)
-    }
+    fun tryGetCrypto(iv: ByteString?): Result<CryptoObject> =
+        biometricCryptoUseCase.tryGetCrypto(EncryptionMode.DECRYPT, iv)
 
     fun loadPasswordWithCrypto(crypto: CryptoObject) {
         viewModelScope.launch {

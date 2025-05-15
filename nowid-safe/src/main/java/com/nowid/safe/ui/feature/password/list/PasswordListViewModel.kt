@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,9 +33,8 @@ class PasswordListViewModel @Inject constructor(
         return repository.getEncryptedData(id)
     }
 
-    fun tryGetCrypto(iv: ByteString?): CryptoObject? {
-        return biometricCryptoUseCase.tryGetCrypto(EncryptionMode.DECRYPT, iv)
-    }
+    fun tryGetCrypto(iv: ByteString?): Result<CryptoObject> =
+        biometricCryptoUseCase.tryGetCrypto(EncryptionMode.DECRYPT, iv)
 
     fun loadPasswordWithCrypto(
         id: String,
@@ -48,7 +46,6 @@ class PasswordListViewModel @Inject constructor(
                 val plain = repository.loadPasswordWithCrypto(id, crypto)!!
                 onResult(Result.success(plain))
             } catch (e: Exception) {
-                Timber.e(e)
                 onResult(Result.failure(e))
             }
         }

@@ -2,8 +2,12 @@
 agp = "8.9.2"
 biometric = "1.1.0"
 datastore = "1.1.6"
+desugar_jdk_libs = "2.1.5"
 hiltAndroidCompiler = "2.56.2"
+hiltAndroidTesting = "2.56"
+hiltCompiler = "2.56.2"
 hiltNavigationCompose = "1.2.0"
+junitKtx = "1.2.1"
 kotlin = "2.1.10"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -11,7 +15,11 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 cbor = "4.2.0"
 cose-java = "1.1.0"
+kotlinxCoroutinesTest = "1.7.3"
 materialIconsExtended = "1.7.8"
+mockitoAndroid = "5.4.0"
+mockitoCore = "5.12.0"
+mockitoKotlin = "5.2.1"
 protobuf = "4.29.2"
 protobufPlugin = "0.9.4"
 timber = "5.0.1"
@@ -29,14 +37,22 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junitKtx" }
 androidx-material = { module = "androidx.compose.material:material" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroidTesting" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 cbor = { group = "com.upokecenter", name = "cbor", version.ref = "cbor" }
 cose = { group = "com.augustcellars.cose", name = "cose-java", version.ref = "cose-java" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockitoAndroid" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 protobuf-kotlin-lite = { group = "com.google.protobuf", name = "protobuf-kotlin-lite", version.ref = "protobuf" }
 protobuf-protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
@@ -65,3 +81,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 devtools-ksp = { id = "com.google.devtools.ksp" }
 protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }
+hilt-android-plugin = { id = "dagger.hilt.android.plugin" }

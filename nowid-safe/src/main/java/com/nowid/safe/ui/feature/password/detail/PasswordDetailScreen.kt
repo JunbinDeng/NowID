@@ -75,9 +75,9 @@ fun PasswordDetailScreen(
             onSuccess = { crypto ->
                 viewModel.loadPasswordWithCrypto(crypto)
             },
-            onError = { msg ->
-                Timber.e(msg)
-                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+            onError = { e ->
+                Timber.e(e)
+                Toast.makeText(activity, e.message, Toast.LENGTH_SHORT).show()
             },
         )
     }
