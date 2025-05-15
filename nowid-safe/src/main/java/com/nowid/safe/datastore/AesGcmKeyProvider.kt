@@ -50,7 +50,7 @@ class AesGcmKeyProvider : KeyProvider {
         )
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setUserAuthenticationRequired(!isRunningTest())
+            .setUserAuthenticationRequired(true)
             .setUserAuthenticationValidityDurationSeconds(
                 USER_AUTHENTICATION_VALIDITY_DURATION_SECONDS
             )
@@ -58,14 +58,5 @@ class AesGcmKeyProvider : KeyProvider {
 
         keyGenerator.init(spec)
         return keyGenerator.generateKey()
-    }
-
-    private fun isRunningTest(): Boolean {
-        return try {
-            Class.forName("org.junit.Test")
-            true
-        } catch (_: ClassNotFoundException) {
-            false
-        }
     }
 }
