@@ -5,6 +5,7 @@ datastore = "1.1.6"
 desugar_jdk_libs = "2.1.5"
 hiltAndroidCompiler = "2.56.2"
 hiltAndroidTesting = "2.56"
+hiltCompiler = "2.56.2"
 hiltNavigationCompose = "1.2.0"
 junitKtx = "1.2.1"
 kotlin = "2.1.10"
@@ -42,6 +43,7 @@ androidx-material-icons-extended = { module = "androidx.compose.material:materia
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroidTesting" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

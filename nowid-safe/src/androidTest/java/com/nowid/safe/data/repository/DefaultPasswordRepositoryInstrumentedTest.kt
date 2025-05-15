@@ -3,9 +3,14 @@ package com.nowid.safe.data.repository
 import androidx.datastore.core.DataStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.protobuf.kotlin.toByteString
+import com.nowid.safe.common.Dispatcher
+import com.nowid.safe.common.NowIDDispatchers.IO
 import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore
 import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore.EncryptedPasswordData.PasswordItem
 import com.nowid.safe.datastore.AesGcmKeyProvider
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +18,6 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import org.junit.Assert.assertEquals
@@ -21,12 +25,28 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import javax.crypto.AEADBadTagException
+import javax.inject.Inject
 
+@HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
 class DefaultPasswordRepositoryInstrumentedTest {
+    @get:Rule
+    val hiltRule = HiltAndroidRule(this)
+
+    @Inject
+    @Dispatcher(IO)
+    lateinit var fakeDispatcher: CoroutineDispatcher
+
+    @Before
+    fun setup() {
+        hiltRule.inject()
+    }
+
     private class FakeDataStore(
         initial: PasswordStore = PasswordStore.getDefaultInstance()
     ) : DataStore<PasswordStore> {
@@ -44,7 +64,6 @@ class DefaultPasswordRepositoryInstrumentedTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun createRepositoryWithFakeStore(): DefaultPasswordRepository {
         // A controlled environment without interacting with actual data storage
-        val fakeDispatcher = UnconfinedTestDispatcher()
         val fakeStore = FakeDataStore()
         val keyProvider = AesGcmKeyProvider()
         val repository = DefaultPasswordRepository(fakeDispatcher, fakeStore, keyProvider)
