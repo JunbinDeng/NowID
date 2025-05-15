@@ -1,19 +1,10 @@
 package com.nowid.safe.data.repository
 
-import androidx.datastore.core.DataStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.protobuf.kotlin.toByteString
-import com.nowid.safe.common.Dispatcher
-import com.nowid.safe.common.NowIDDispatchers.IO
-import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore
 import com.nowid.safe.data.PasswordStoreOuterClass.PasswordStore.EncryptedPasswordData.PasswordItem
-import com.nowid.safe.datastore.AesGcmKeyProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -39,41 +30,15 @@ class DefaultPasswordRepositoryInstrumentedTest {
     val hiltRule = HiltAndroidRule(this)
 
     @Inject
-    @Dispatcher(IO)
-    lateinit var fakeDispatcher: CoroutineDispatcher
+    lateinit var repository: DefaultPasswordRepository
 
     @Before
     fun setup() {
         hiltRule.inject()
     }
 
-    private class FakeDataStore(
-        initial: PasswordStore = PasswordStore.getDefaultInstance()
-    ) : DataStore<PasswordStore> {
-        // A simple in-memory fake DataStore for testing
-        private val _state = MutableStateFlow(initial)
-        override val data: StateFlow<PasswordStore> get() = _state
-
-        override suspend fun updateData(transform: suspend (PasswordStore) -> PasswordStore): PasswordStore {
-            val newValue = transform(_state.value)
-            _state.value = newValue
-            return newValue
-        }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun createRepositoryWithFakeStore(): DefaultPasswordRepository {
-        // A controlled environment without interacting with actual data storage
-        val fakeStore = FakeDataStore()
-        val keyProvider = AesGcmKeyProvider()
-        val repository = DefaultPasswordRepository(fakeDispatcher, fakeStore, keyProvider)
-        return repository
-    }
-
     @Test
     fun observePasswordItemsFlowWithUpdates() = runTest {
-        val repository = createRepositoryWithFakeStore()
-
         val validCrypto1 = repository.getEncryptCrypto()
         val validCrypto2 = repository.getEncryptCrypto()
         checkNotNull(validCrypto1.cipher) { "Encrypt cipher1 is null" }
@@ -114,8 +79,6 @@ class DefaultPasswordRepositoryInstrumentedTest {
 
     @Test
     fun getDecryptCryptoObject() {
-        val repository = createRepositoryWithFakeStore()
-
         val iv = ByteArray(12) { 0 }
         val cryptoObject = repository.getDecryptCrypto(iv.toByteString())
 
@@ -125,8 +88,6 @@ class DefaultPasswordRepositoryInstrumentedTest {
 
     @Test
     fun savePasswordWithValidCryptoAndData() = runTest {
-        val repository = createRepositoryWithFakeStore()
-
         val validCrypto = repository.getEncryptCrypto()
         checkNotNull(validCrypto.cipher) { "Encrypt cipher is null" }
 
@@ -143,8 +104,6 @@ class DefaultPasswordRepositoryInstrumentedTest {
 
     @Test
     fun getEncryptedDataForExistingId() = runTest {
-        val repository = createRepositoryWithFakeStore()
-
         val validCrypto = repository.getEncryptCrypto()
         checkNotNull(validCrypto.cipher) { "Encrypt cipher is null" }
 
@@ -160,8 +119,6 @@ class DefaultPasswordRepositoryInstrumentedTest {
 
     @Test
     fun loadPasswordWithValidCryptoAndData() = runTest {
-        val repository = createRepositoryWithFakeStore()
-
         val validCrypto = repository.getEncryptCrypto()
         checkNotNull(validCrypto.cipher) { "Encrypt cipher is null" }
 
@@ -180,8 +137,6 @@ class DefaultPasswordRepositoryInstrumentedTest {
 
     @Test
     fun savePasswordWithDuplicateId() = runTest {
-        val repository = createRepositoryWithFakeStore()
-
         val validCrypto1 = repository.getEncryptCrypto()
         val validCrypto2 = repository.getEncryptCrypto()
         checkNotNull(validCrypto1.cipher) { "Encrypt cipher1 is null" }
@@ -200,8 +155,6 @@ class DefaultPasswordRepositoryInstrumentedTest {
 
     @Test
     fun deletePasswordForExistingId() = runTest {
-        val repository = createRepositoryWithFakeStore()
-
         val validCrypto = repository.getEncryptCrypto()
         checkNotNull(validCrypto.cipher) { "Encrypt cipher is null" }
 
@@ -218,8 +171,6 @@ class DefaultPasswordRepositoryInstrumentedTest {
 
     @Test
     fun loadPasswordWithAEADBadTagException() = runTest {
-        val repository = createRepositoryWithFakeStore()
-
         val validCrypto = repository.getEncryptCrypto()
         checkNotNull(validCrypto.cipher) { "Encrypt cipher is null" }
 
