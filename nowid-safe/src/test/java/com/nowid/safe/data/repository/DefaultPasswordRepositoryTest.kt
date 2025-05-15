@@ -190,17 +190,15 @@ class DefaultPasswordRepositoryTest {
         assertTrue(items[0].isEmpty())
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun loadPasswordWithKeyPermanentlyInvalidatedException() = runTest {
-        val fakeRepository =
-            createRepositoryWithFakeStore(FakeKeyProvider(throwOnDecryptInit = true))
+    fun `load password with key permanently invalidated exception`() = runTest {
+        val repository = createRepositoryWithFakeStore(FakeKeyProvider(throwOnDecryptInit = true))
 
         val iv = ByteArray(0).toByteString()
 
         assertThrows(KeyPermanentlyInvalidatedException::class.java) {
             // Attempt to decrypt
-            fakeRepository.getDecryptCrypto(iv)
+            repository.getDecryptCrypto(iv)
         }
     }
 }
