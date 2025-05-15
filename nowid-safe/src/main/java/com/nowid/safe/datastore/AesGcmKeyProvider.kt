@@ -34,6 +34,13 @@ class AesGcmKeyProvider : KeyProvider {
         return cipher
     }
 
+    override fun deleteEntry() {
+        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        if (keyStore.containsAlias(KEY_ALIAS)) {
+            keyStore.deleteEntry(KEY_ALIAS)
+        }
+    }
+
     private fun getOrCreateKey(): SecretKey {
         val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 

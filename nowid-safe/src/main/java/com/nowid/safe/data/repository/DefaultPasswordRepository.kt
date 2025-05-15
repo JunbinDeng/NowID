@@ -1,5 +1,6 @@
 package com.nowid.safe.data.repository
 
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import androidx.annotation.VisibleForTesting
 import androidx.biometric.BiometricPrompt.CryptoObject
 import androidx.datastore.core.DataStore
@@ -37,8 +38,14 @@ class DefaultPasswordRepository @Inject constructor(
 
 
     override fun getEncryptCrypto(): CryptoObject {
-        val cipher = keyProvider.getEncryptCipher()
-        return CryptoObject(cipher)
+        try {
+            val cipher = keyProvider.getEncryptCipher()
+            return CryptoObject(cipher)
+        } catch (e: KeyPermanentlyInvalidatedException) {
+            keyProvider.deleteEntry()
+            keyProvider.getEncryptCipher()
+            throw e
+        }
     }
 
     override suspend fun savePasswordWithCrypto(
@@ -87,8 +94,14 @@ class DefaultPasswordRepository @Inject constructor(
         }.firstOrNull()
 
     override fun getDecryptCrypto(iv: ByteString): CryptoObject {
-        val cipher = keyProvider.getDecryptCipher(iv.toByteArray())
-        return CryptoObject(cipher)
+        try {
+            val cipher = keyProvider.getDecryptCipher(iv.toByteArray())
+            return CryptoObject(cipher)
+        } catch (e: KeyPermanentlyInvalidatedException) {
+            keyProvider.deleteEntry()
+            keyProvider.getEncryptCipher()
+            throw e
+        }
     }
 
     override suspend fun loadPasswordWithCrypto(

@@ -1,5 +1,6 @@
 package com.nowid.safe.util
 
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import androidx.biometric.BiometricPrompt
 import androidx.biometric.BiometricPrompt.CryptoObject
 import androidx.core.content.ContextCompat
@@ -15,18 +16,25 @@ import androidx.fragment.app.FragmentActivity
  * @param promptInfo Biometric prompt UI configuration.
  * @param tryGetCrypto Attempts to retrieve a CryptoObject.
  * @param onSuccess Called after successful auth or CryptoObject retrieval.
- * @param onError Called with an error message on failure.
+ * @param onError Called with an error on failure.
  */
 fun performBiometricEncryption(
     activity: FragmentActivity,
     promptInfo: BiometricPrompt.PromptInfo,
-    tryGetCrypto: () -> CryptoObject?,
+    tryGetCrypto: () -> Result<CryptoObject>,
     onSuccess: (crypto: CryptoObject) -> Unit,
-    onError: (String) -> Unit
+    onError: (e: Throwable) -> Unit
 ) {
-    val crypto = tryGetCrypto()
-    if (crypto != null) {
-        onSuccess(crypto)
+    val result = tryGetCrypto()
+    val cryptoObject = result.getOrNull()
+
+    val exception = result.exceptionOrNull()
+    when (exception) {
+        is KeyPermanentlyInvalidatedException -> return onError(exception)
+    }
+
+    if (cryptoObject != null) {
+        onSuccess(cryptoObject)
         return
     }
 
@@ -35,20 +43,30 @@ fun performBiometricEncryption(
         ContextCompat.getMainExecutor(activity),
         object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                val cryptoObject = result.cryptoObject ?: tryGetCrypto()
+                var cryptoObject = result.cryptoObject
                 if (cryptoObject != null) {
-                    onSuccess(cryptoObject)
-                } else {
-                    onError("Authentication succeeded but no cryptoObject found")
+                    return onSuccess(cryptoObject)
                 }
+
+                val cryptoResult = tryGetCrypto()
+                cryptoObject = cryptoResult.getOrNull()
+                if (cryptoResult.isSuccess && cryptoObject != null) {
+                    onSuccess(cryptoObject)
+                    return
+                }
+
+                onError(
+                    cryptoResult.exceptionOrNull()
+                        ?: IllegalStateException("Authentication succeeded but no cryptoObject found")
+                )
             }
 
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                onError(errString.toString())
+                onError(IllegalArgumentException(errString.toString()))
             }
 
             override fun onAuthenticationFailed() {
-                onError("Authentication failed")
+                onError(IllegalArgumentException("Authentication failed"))
             }
         }
     ).authenticate(promptInfo)

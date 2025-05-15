@@ -1,10 +1,8 @@
 package com.nowid.safe.domain
 
-import android.security.keystore.UserNotAuthenticatedException
 import androidx.biometric.BiometricPrompt.CryptoObject
 import com.google.protobuf.ByteString
 import com.nowid.safe.data.repository.PasswordRepository
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -23,23 +21,23 @@ class BiometricEncryptUseCase @Inject constructor(
     fun tryGetCrypto(
         encryptionMode: EncryptionMode,
         iv: ByteString? = null,
-    ): CryptoObject? = try {
-        if (encryptionMode == EncryptionMode.DECRYPT) {
-            if (iv == null) {
-                throw IllegalStateException("Missing IV for decryption")
+    ): Result<CryptoObject> {
+        return try {
+            if (encryptionMode == EncryptionMode.DECRYPT) {
+                if (iv == null) {
+                    throw IllegalStateException("Missing IV for decryption")
+                }
+                val crypto = repository.getDecryptCrypto(iv)
+                return Result.success(crypto)
+            } else if (encryptionMode == EncryptionMode.ENCRYPT) {
+                val crypto = repository.getEncryptCrypto()
+                return Result.success(crypto)
+            } else {
+                throw IllegalArgumentException("Invalid encryption mode")
             }
-            repository.getDecryptCrypto(iv)
-        } else if (encryptionMode == EncryptionMode.ENCRYPT) {
-            repository.getEncryptCrypto()
-        } else {
-            throw IllegalArgumentException("Invalid encryption mode")
+        } catch (e: Exception) {
+            return Result.failure<CryptoObject>(e)
         }
-    } catch (e: UserNotAuthenticatedException) {
-        Timber.e(e)
-        null
-    } catch (e: Exception) {
-        Timber.e(e)
-        null
     }
 }
 

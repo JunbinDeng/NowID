@@ -25,4 +25,8 @@ class FakeKeyProvider(
         cipher.init(Cipher.DECRYPT_MODE, key, spec)
         return cipher
     }
+
+    override fun deleteEntry() {
+        // Not implemented
+    }
 }
